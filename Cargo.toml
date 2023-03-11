@@ -1,0 +1,12 @@
+[workspace]
+members = [
+    "src/ecdsa_example_rust",
+    "test-ecdsa",
+]
+
+[profile.release]
+lto = true
+opt-level = 'z'
+panic = 'abort'
+
+
