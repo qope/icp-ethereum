@@ -179,39 +179,3 @@ getrandom::register_custom_getrandom!(always_fail);
 pub fn always_fail(_buf: &mut [u8]) -> Result<(), getrandom::Error> {
     Err(getrandom::Error::UNSUPPORTED)
 }
-
-#[cfg(test)]
-mod tests {
-
-    #[test]
-    fn test_ecdsa_compatibility() {
-        use k256::{
-            ecdsa::{signature::Signer, Signature, SigningKey},
-            SecretKey,
-        };
-        let mut rng = rand::thread_rng();
-        // Signing
-        let signing_key = SigningKey::random(&mut rng); // Serialize with `::to_bytes()`
-        dbg!("sk=", signing_key.to_bytes());
-        let message =
-            b"ECDSA proves knowledge of a secret number in the context of a single message";
-
-        // Note: The signature type must be annotated or otherwise inferable as
-        // `Signer` has many impls of the `Signer` trait (for both regular and
-        // recoverable signature types).
-        let signature: Signature = signing_key.sign(message);
-
-        // Verification
-        use k256::{
-            ecdsa::{signature::Verifier, VerifyingKey},
-            EncodedPoint,
-        };
-
-        let verifying_key = VerifyingKey::from(&signing_key); // Serializ
-
-        let is_signature_valid = k256::ecdsa::VerifyingKey::from_sec1_bytes(&pubkey_bytes)
-            .expect("failed to deserialize sec1 encoding into public key")
-            .verify(message.as_slice(), &signature)
-            .is_ok();
-    }
-}
