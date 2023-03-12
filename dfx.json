@@ -1,8 +1,8 @@
 {
   "canisters": {
-    "ecdsa_example_rust": {
-      "candid": "src/ecdsa_example_rust/ecdsa_example.did",
-      "package": "ecdsa_example",
+    "ethereum-ecdsa": {
+      "candid": "src/ethereum-ecdsa/ethereum_ecdsa.did",
+      "package": "ethereum_ecdsa",
       "type": "rust"
     }
   }

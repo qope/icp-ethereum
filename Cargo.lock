@@ -806,21 +806,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ethereum-ecdsa"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "candid",
- "getrandom",
- "hex",
- "ic-cdk",
- "k256 0.12.0",
- "serde",
- "sha2 0.10.6",
- "tiny-keccak",
-]
-
-[[package]]
 name = "ethereum-types"
 version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -834,6 +819,21 @@ dependencies = [
  "primitive-types",
  "scale-info",
  "uint",
+]
+
+[[package]]
+name = "ethereum_ecdsa"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "candid",
+ "getrandom",
+ "hex",
+ "ic-cdk",
+ "k256 0.12.0",
+ "serde",
+ "sha2 0.10.6",
+ "tiny-keccak",
 ]
 
 [[package]]
