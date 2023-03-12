@@ -9,6 +9,6 @@ edition = "2021"
 anyhow = "1.0.69"
 ethers = { version = "2.0.0", features = ["legacy"] }
 hex = "0.4.3"
-k256 = { version = "0.13.0", features = ["ecdsa"] }
+k256 = { version = "0.12.0", features = ["ecdsa"] }
 tiny-keccak = { version = "2.0.2", features = ["keccak"] }
 tokio = { version = "1.26.0", features = ["sync", "full"] }
