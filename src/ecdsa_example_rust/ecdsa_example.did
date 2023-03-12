@@ -1,5 +1,4 @@
 service : {
   address : () -> (variant { Ok: record { address_hex: text; }; Err: text });
   sign_message : (text) -> (variant { Ok: record { signature_hex: text; }; Err: text });
-  sign_tx : (text, text, text, text, text, text) -> (variant { Ok: record { tx_hex: text; }; Err: text });
 }

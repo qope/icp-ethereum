@@ -1,13 +1,10 @@
-use ethers::{
-    signers::to_eip155_v,
-    types::{transaction::eip2718::TypedTransaction, Signature as EthersSignature, U256},
-};
+use std::convert::TryFrom;
+
 use k256::{
     ecdsa::{RecoveryId, Signature, SigningKey, VerifyingKey},
     elliptic_curve::{sec1::ToEncodedPoint, FieldBytes},
     PublicKey, Secp256k1,
 };
-use std::convert::TryFrom;
 use tiny_keccak::{Hasher, Keccak};
 
 pub fn keccak256(input: &[u8]) -> [u8; 32] {
@@ -20,15 +17,17 @@ pub fn keccak256(input: &[u8]) -> [u8; 32] {
 
 /// simulate icp sign api
 pub fn sign(sk: &[u8], msg: &[u8]) -> anyhow::Result<Vec<u8>> {
-    let sk = SigningKey::from_slice(&sk)?;
+    let sk = SigningKey::from_bytes(&sk)?;
     let hashed_msg = keccak256(msg);
     let (sig, _) = sk.sign_prehash_recoverable(&hashed_msg)?;
     Ok(sig.to_bytes().to_vec())
 }
 
 pub fn sk_to_pk(sk: &[u8]) -> anyhow::Result<Vec<u8>> {
-    let sk = SigningKey::from_slice(sk)?;
-    let pk = sk.verifying_key().to_sec1_bytes();
+    let sk = SigningKey::from_bytes(sk)?;
+    let pk = sk.verifying_key();
+    let pk = pk.to_encoded_point(true);
+    let pk = pk.as_bytes();
     Ok(pk.to_vec())
 }
 
@@ -55,18 +54,15 @@ pub fn format_message(message: &[u8]) -> Vec<u8> {
     eth_message
 }
 
-pub fn format_sig(pk: &[u8], msg: &[u8], icp_sig: &[u8]) -> anyhow::Result<EthersSignature> {
+pub fn format_sig(pk: &[u8], msg: &[u8], icp_sig: &[u8]) -> anyhow::Result<String> {
     let pk = VerifyingKey::from_sec1_bytes(pk)?;
     let hashed_msg = keccak256(msg);
     let sig = Signature::try_from(icp_sig)?;
     let recid = RecoveryId::trial_recovery_from_prehash(&pk, &hashed_msg, &sig)?;
     let v = u8::from(recid) as u64 + 27;
-    let r_bytes: FieldBytes<Secp256k1> = sig.r().into();
-    let s_bytes: FieldBytes<Secp256k1> = sig.s().into();
-    let r = U256::from_big_endian(r_bytes.as_slice());
-    let s = U256::from_big_endian(s_bytes.as_slice());
-    let sig = EthersSignature { r, s, v };
-    Ok(sig)
+    let v_bytes: Vec<u8> = v.to_le_bytes().into();
+    let sig_with_v = hex::encode(sig.to_bytes()) + &hex::encode(&v_bytes[..1]);
+    Ok(sig_with_v)
 }
 
 // #[cfg(test)]

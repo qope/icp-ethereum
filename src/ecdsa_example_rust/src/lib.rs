@@ -1,9 +1,9 @@
-pub mod ecdsa_api;
+mod ecdsa_api;
 mod ethereum_wallet;
-pub mod types;
-pub mod utils;
+mod types;
+mod utils;
 
-use ethereum_wallet::{get_address, sign_message as inner_sign_message, sign_transaction};
+use ethereum_wallet::{get_address, sign_message as inner_sign_message};
 use ic_cdk::export::{
     candid::CandidType,
     serde::{Deserialize, Serialize},
@@ -96,30 +96,28 @@ async fn sign_message(message: String) -> Result<MessageSignatureReply, String> 
     })
 }
 
-#[update]
-async fn sign_tx(
-    to: String,
-    value: String,
-    nonce: String,
-    chain_id: String,
-    gas: String,
-    gas_price: String,
-) -> Result<TxReply, String> {
-    let tx_hex = sign_transaction(
-        to,
-        value,
-        nonce,
-        chain_id,
-        gas,
-        gas_price,
-        "dfx_test_key".to_string(),
-        vec![],
-    )
-    .await;
-    Ok(TxReply { tx_hex })
-}
-
-
+// #[update]
+// async fn sign_tx(
+//     to: String,
+//     value: String,
+//     nonce: String,
+//     chain_id: String,
+//     gas: String,
+//     gas_price: String,
+// ) -> Result<TxReply, String> {
+//     let tx_hex = sign_transaction(
+//         to,
+//         value,
+//         nonce,
+//         chain_id,
+//         gas,
+//         gas_price,
+//         "dfx_test_key".to_string(),
+//         vec![],
+//     )
+//     .await;
+//     Ok(TxReply { tx_hex })
+// }
 
 // #[query]
 // async fn verify(

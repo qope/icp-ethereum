@@ -14,10 +14,8 @@ candid = "0.8.4"
 ic-cdk = "0.7.1"
 hex = "0.4.3"
 sha2 = "0.10.6"
-k256 = { version = "0.13.0",  features = ["ecdsa"] }
+k256 = { version = "0.12.0",  features = ["ecdsa"] }
 # Enable `custom` feature of k256's getrandom dependency. See lib.rs for more details.
-getrandom = { version = "0.2", features = ["custom"] }
+getrandom = { version = "0.2.7", features = ["custom"] }
 tiny-keccak = { version = "2.0.2", features = ["keccak"] }
-sha3 = "0.10.6"
-ethers = { version = "1.0.2", features = ["legacy", "ws"] }
 anyhow = "1.0.69"
