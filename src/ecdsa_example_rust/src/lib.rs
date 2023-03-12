@@ -1,13 +1,15 @@
+pub mod ecdsa_api;
+mod ethereum_wallet;
+pub mod types;
+pub mod utils;
+
+use ethereum_wallet::{get_address, sign_message as inner_sign_message, sign_transaction};
 use ic_cdk::export::{
     candid::CandidType,
     serde::{Deserialize, Serialize},
     Principal,
 };
 use ic_cdk::{query, update};
-use k256::ecdsa::VerifyingKey;
-use std::convert::TryFrom;
-use std::str::FromStr;
-use tiny_keccak::{Hasher, Keccak};
 
 #[derive(CandidType, Serialize, Debug)]
 struct PublicKeyReply {
@@ -15,8 +17,23 @@ struct PublicKeyReply {
 }
 
 #[derive(CandidType, Serialize, Debug)]
+struct AddressReply {
+    pub address_hex: String,
+}
+
+#[derive(CandidType, Serialize, Debug)]
 struct SignatureReply {
     pub signature_hex: String,
+}
+
+#[derive(CandidType, Serialize, Debug)]
+struct MessageSignatureReply {
+    pub signature_hex: String,
+}
+
+#[derive(CandidType, Serialize, Debug)]
+struct TxReply {
+    pub tx_hex: String,
 }
 
 #[derive(CandidType, Serialize, Debug)]
@@ -64,102 +81,68 @@ pub enum EcdsaCurve {
 }
 
 #[update]
-async fn public_key() -> Result<PublicKeyReply, String> {
-    let request = ECDSAPublicKey {
-        canister_id: None,
-        derivation_path: vec![],
-        key_id: EcdsaKeyIds::TestKeyLocalDevelopment.to_key_id(),
-    };
-
-    let (res,): (ECDSAPublicKeyReply,) =
-        ic_cdk::call(mgmt_canister_id(), "ecdsa_public_key", (request,))
-            .await
-            .map_err(|e| format!("ecdsa_public_key failed {}", e.1))?;
-
-    Ok(PublicKeyReply {
-        public_key_hex: hex::encode(&res.public_key),
+async fn address() -> Result<AddressReply, String> {
+    let address = get_address("dfx_test_key".to_string(), vec![]).await;
+    Ok(AddressReply {
+        address_hex: address,
     })
 }
 
 #[update]
-async fn sign(message: String) -> Result<SignatureReply, String> {
-    let request = SignWithECDSA {
-        message_hash: keccak256(&message).to_vec(),
-        derivation_path: vec![],
-        key_id: EcdsaKeyIds::TestKeyLocalDevelopment.to_key_id(),
-    };
-
-    let (response,): (SignWithECDSAReply,) = ic_cdk::api::call::call_with_payment(
-        mgmt_canister_id(),
-        "sign_with_ecdsa",
-        (request,),
-        25_000_000_000,
-    )
-    .await
-    .map_err(|e| format!("sign_with_ecdsa failed {}", e.1))?;
-
-    Ok(SignatureReply {
-        signature_hex: hex::encode(&response.signature),
+async fn sign_message(message: String) -> Result<MessageSignatureReply, String> {
+    let sined_message = inner_sign_message(message, "dfx_test_key".to_string(), vec![]).await;
+    Ok(MessageSignatureReply {
+        signature_hex: sined_message,
     })
 }
 
-#[query]
-async fn verify(
-    signature_hex: String,
-    message: String,
-    public_key_hex: String,
-) -> Result<SignatureVerificationReply, String> {
-    use k256::ecdsa::signature::DigestVerifier;
-    use sha3::{Digest, Keccak256};
-
-    let signature_bytes = hex::decode(&signature_hex).expect("failed to hex-decode signature");
-    let pubkey_bytes = hex::decode(&public_key_hex).expect("failed to hex-decode public key");
-
-    let public_key = VerifyingKey::from_sec1_bytes(&pubkey_bytes).expect("failed parse public key");
-    let message_bytes = message.as_bytes();
-    let digest = Keccak256::new_with_prefix(message_bytes);
-
-    let signature = k256::ecdsa::Signature::try_from(signature_bytes.as_slice())
-        .expect("failed to deserialize signature");
-    let is_signature_valid = public_key.verify_digest(digest, &signature).is_ok();
-
-    Ok(SignatureVerificationReply { is_signature_valid })
+#[update]
+async fn sign_tx(
+    to: String,
+    value: String,
+    nonce: String,
+    chain_id: String,
+    gas: String,
+    gas_price: String,
+) -> Result<TxReply, String> {
+    let tx_hex = sign_transaction(
+        to,
+        value,
+        nonce,
+        chain_id,
+        gas,
+        gas_price,
+        "dfx_test_key".to_string(),
+        vec![],
+    )
+    .await;
+    Ok(TxReply { tx_hex })
 }
 
-fn mgmt_canister_id() -> CanisterId {
-    CanisterId::from_str(&"aaaaa-aa").unwrap()
-}
 
-fn keccak256(input: &String) -> [u8; 32] {
-    let mut hasher = Keccak::v256();
-    hasher.update(&input.as_bytes());
-    let mut hash = [0u8; 32];
-    hasher.finalize(&mut hash);
-    hash
-}
 
-enum EcdsaKeyIds {
-    #[allow(unused)]
-    TestKeyLocalDevelopment,
-    #[allow(unused)]
-    TestKey1,
-    #[allow(unused)]
-    ProductionKey1,
-}
+// #[query]
+// async fn verify(
+//     signature_hex: String,
+//     message: String,
+//     public_key_hex: String,
+// ) -> Result<SignatureVerificationReply, String> {
+//     use k256::ecdsa::signature::DigestVerifier;
+//     use sha3::{Digest, Keccak256};
 
-impl EcdsaKeyIds {
-    fn to_key_id(&self) -> EcdsaKeyId {
-        EcdsaKeyId {
-            curve: EcdsaCurve::Secp256k1,
-            name: match self {
-                Self::TestKeyLocalDevelopment => "dfx_test_key",
-                Self::TestKey1 => "test_key_1",
-                Self::ProductionKey1 => "key_1",
-            }
-            .to_string(),
-        }
-    }
-}
+//     let signature_bytes = hex::decode(&signature_hex).expect("failed to hex-decode signature");
+//     let pubkey_bytes = hex::decode(&public_key_hex).expect("failed to hex-decode public key");
+
+//     let public_key = VerifyingKey::from_sec1_bytes(&pubkey_bytes).expect("failed parse public key");
+//     let message_bytes = message.as_bytes();
+//     let digest = Keccak256::new_with_prefix(message_bytes);
+
+//     let signature = k256::ecdsa::Signature::try_from(signature_bytes.as_slice())
+//         .expect("failed to deserialize signature");
+//     let is_signature_valid = public_key.verify_digest(digest, &signature).is_ok();
+
+//     Ok(SignatureVerificationReply { is_signature_valid })
+// }
 
 // In the following, we register a custom getrandom implementation because
 // otherwise getrandom (which is a dependency of k256) fails to compile.
