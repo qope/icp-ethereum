@@ -1,3 +1,5 @@
 /target
 /src/ecdsa_example_rust/target
 /.dfx
+/node_modules
+canister_ids.json
