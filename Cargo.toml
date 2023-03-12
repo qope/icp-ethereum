@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "src/ecdsa_example_rust",
+    "src/ethereum-ecdsa",
     "test-ecdsa",
 ]
 
