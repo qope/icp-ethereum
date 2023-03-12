@@ -9,10 +9,9 @@ pub async fn get_address(key_name: String, derivation_path: Vec<Vec<u8>>) -> Str
     // Fetch the public key of the given derivation path.
     let public_key = ecdsa_api::ecdsa_public_key(key_name, derivation_path).await;
 
-    let mut address = pk_to_address(&public_key).expect("address calc error");
-    address = "0x".to_string() + &address;
+    let address = pk_to_address(&public_key).expect("address calc error");
 
-    address
+    "0x".to_string() + &address
 }
 
 pub async fn sign_message(msg: String, key_name: String, derivation_path: Vec<Vec<u8>>) -> String {
@@ -26,7 +25,7 @@ pub async fn sign_message(msg: String, key_name: String, derivation_path: Vec<Ve
     .await;
     let pk = ecdsa_api::ecdsa_public_key(key_name, derivation_path).await;
     let sig = format_sig(&pk, &format_msg, &sig_native).expect("format sig error");
-    sig
+    "0x".to_string() + &sig
 }
 
 // pub async fn sign_transaction(
