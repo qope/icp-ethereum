@@ -130,13 +130,6 @@ fn mgmt_canister_id() -> CanisterId {
     CanisterId::from_str(&"aaaaa-aa").unwrap()
 }
 
-fn sha256(input: &String) -> [u8; 32] {
-    use sha2::Digest;
-    let mut hasher = sha2::Sha256::new();
-    hasher.update(input.as_bytes());
-    hasher.finalize().into()
-}
-
 fn keccak256(input: &String) -> [u8; 32] {
     let mut hasher = Keccak::v256();
     hasher.update(&input.as_bytes());
