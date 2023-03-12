@@ -8,14 +8,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.69"
 ethers = { version = "2.0.0", features = ["legacy"] }
-eyre = "0.6.8"
 hex = "0.4.3"
-hex-literal = "0.3.4"
 k256 = { version = "0.13.0", features = ["ecdsa"] }
-rand = "0.8.5"
-serde = "1.0.155"
-serde_json = "1.0.94"
-sha2 = "0.10.6"
-sha3 = "0.10.6"
 tiny-keccak = { version = "2.0.2", features = ["keccak"] }
 tokio = { version = "1.26.0", features = ["sync", "full"] }
